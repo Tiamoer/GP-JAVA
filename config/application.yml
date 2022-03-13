@@ -1,0 +1,13 @@
+server:
+  port: 8001
+
+spring:
+
+  datasource:
+    url: jdbc:oracle:thin:@127.0.0.1:1521:ORCL
+    username: slmadmin
+    password: 745700yxy
+    driverClassName : oracle.jdbc.OracleDriver
+
+  jpa:
+    open-in-view: false
