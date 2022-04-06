@@ -2,6 +2,8 @@ server:
   port: 8001
 
 spring:
+  main:
+    allow-circular-references: true
 
   datasource:
     url: jdbc:oracle:thin:@127.0.0.1:1521:ORCL
@@ -11,3 +13,9 @@ spring:
 
   jpa:
     open-in-view: false
+
+token:
+  # jwt有效期 2h
+  expire_time: 7200000
+  # 密钥 必须六位
+  secret_key: world
