@@ -63,6 +63,13 @@
             <artifactId>hutool-all</artifactId>
             <version>5.8.0.M2</version>
         </dependency>
+
+        <!-- JSH -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version>
+        </dependency>
     </dependencies>
 
     <build>
