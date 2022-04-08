@@ -88,7 +88,7 @@ public class UserController {
 		String phone = (String) req.get("phone");
 		String code = (String) req.get("code");
 		UserEntity user = userService.getUserByPhone(phone);
-		if (user != null && code.equals(this.code)) {
+		if (user != null && code.equals(UserController.code)) {
 			String token = JWTUtil.sign(phone);
 			return ResponseBean.success("Login successful!", new HashMap<>(){
 				{
@@ -96,8 +96,10 @@ public class UserController {
 					put("refreshToken", token);
 				}
 			});
-		} else {
+		} else if (user == null) {
 			return ResponseBean.fail(ResponseCode.RC401, "用户 " + phone + " 不存在！");
+		} else {
+			return ResponseBean.fail(ResponseCode.RC401, "验证码 " + code + " 错误！");
 		}
 	}
 
@@ -167,15 +169,25 @@ public class UserController {
 	}
 
 	/**
+	 * 生成验证码
+	 * @return 验证码
+	 */
+	@PostMapping("/getSmsCode")
+	public ResponseBean<String> getSmsCode() {
+		// 生成随机数
+		int random = new Random().nextInt(100000, 999999);
+		code = String.valueOf(random);
+		logger.info("验证码 = {}", code);
+		return ResponseBean.success("Generation Complete!", "code");
+	}
+
+	/**
 	 * 获取验证码
 	 * @return 验证码
 	 */
 	@GetMapping("/getCode")
 	public ResponseBean<String> getCode() {
-		// 生成随机数
-		int random = new Random().nextInt(10000, 99999);
-		code = String.valueOf(random);
-		return ResponseBean.success("Generation Complete!", String.valueOf(random));
+		return ResponseBean.success("Get Code!", code);
 	}
 
 }
