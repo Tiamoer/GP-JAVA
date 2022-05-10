@@ -1,7 +1,7 @@
 package com.yangxy.gpjava.quartz.entity;
 
 import com.yangxy.gpjava.log.entity.LogEntity;
-import com.yangxy.gpjava.user.entity.UserEntity;
+import com.yangxy.gpjava.user.entity.SlmUser;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -22,7 +22,7 @@ public class QuartzEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "CREATE_USER", nullable = false)
-	private UserEntity createUser;
+	private SlmUser createUser;
 
 	@Column(name = "QUARTZ_STATUS", nullable = false, length = 20)
 	private String quartzStatus;
@@ -58,11 +58,11 @@ public class QuartzEntity {
 		this.quartzStatus = quartzStatus;
 	}
 
-	public UserEntity getCreateUser() {
+	public SlmUser getCreateUser() {
 		return createUser;
 	}
 
-	public void setCreateUser(UserEntity createUser) {
+	public void setCreateUser(SlmUser createUser) {
 		this.createUser = createUser;
 	}
 

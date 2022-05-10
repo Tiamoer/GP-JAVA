@@ -7,7 +7,7 @@
 package com.yangxy.gpjava.user.service.impl;
 
 import com.yangxy.gpjava.user.dao.UserDao;
-import com.yangxy.gpjava.user.entity.UserEntity;
+import com.yangxy.gpjava.user.entity.SlmUser;
 import com.yangxy.gpjava.user.service.UserService;
 import org.springframework.stereotype.Service;
 
@@ -27,12 +27,12 @@ public class UserServiceImpl implements UserService {
 	UserDao userDao;
 
 	@Override
-	public UserEntity getUserByName(String username) {
+	public SlmUser getUserByName(String username) {
 		return userDao.getUserByName(username);
 	}
 
 	@Override
-	public UserEntity getUserByPhone(String phone) {
+	public SlmUser getUserByPhone(String phone) {
 		return userDao.getUserByPhone(phone);
 	}
 }

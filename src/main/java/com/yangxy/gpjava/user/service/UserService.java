@@ -6,7 +6,7 @@
 
 package com.yangxy.gpjava.user.service;
 
-import com.yangxy.gpjava.user.entity.UserEntity;
+import com.yangxy.gpjava.user.entity.SlmUser;
 
 /**
  * <p>
@@ -16,7 +16,7 @@ import com.yangxy.gpjava.user.entity.UserEntity;
  */
 
 public interface UserService {
-	UserEntity getUserByName(String username);
+	SlmUser getUserByName(String username);
 
-	UserEntity getUserByPhone(String phone);
+	SlmUser getUserByPhone(String phone);
 }

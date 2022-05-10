@@ -6,21 +6,30 @@
 
 package com.yangxy.gpjava.user.mvc;
 
+import cn.hutool.jwt.JWTUtil;
+import com.yangxy.gpjava.authentication.jwt.JwtUtil;
 import com.yangxy.gpjava.exception.UnauthorizedException;
 import com.yangxy.gpjava.response.bean.ResponseBean;
 import com.yangxy.gpjava.response.code.ResponseCode;
-import com.yangxy.gpjava.token.utils.JWTUtil;
 import com.yangxy.gpjava.user.dao.UserDao;
-import com.yangxy.gpjava.user.entity.UserEntity;
+import com.yangxy.gpjava.user.entity.SlmUser;
 import com.yangxy.gpjava.user.service.UserService;
 import com.yangxy.gpjava.user.utils.UserUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.net.http.HttpRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -31,6 +40,7 @@ import java.util.Random;
  * @version 1.0, 2022/3/12
  */
 
+@Slf4j
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -50,13 +60,16 @@ public class UserController {
 	 * @param req post参数
 	 * @return 登陆结果
 	 */
+	@CrossOrigin
 	@PostMapping("/loginByPwd")
 	public ResponseBean<Map<String, String>> loginByPwd(@RequestBody Map<String, Object> req) {
 
 		logger.info("interface:loginByPwd => {}", req);
 		String phone = (String) req.get("phone");
 		String password = (String) req.get("pwd");
-		UserEntity user = userService.getUserByPhone(phone);
+		Assert.notNull(phone, "用户手机号码不能为空！");
+		Assert.notNull(password, "用户密码不能为空！");
+		SlmUser user = userService.getUserByPhone(phone);
 
 		if (user == null) {
 			return ResponseBean.fail(ResponseCode.RC401, "用户 " + phone + " 不存在！");
@@ -66,14 +79,14 @@ public class UserController {
 			logger.info("用户[{}]登陆成功", phone);
 			return ResponseBean.success("Login successful!", new HashMap<String, String>(){
 				{
-					String token = JWTUtil.sign(phone);
+					String token = JwtUtil.createToken(user);
 					put("token", token);
 					put("refreshToken", token);
 				}
 			});
 		} else {
 			logger.info("用户[{}]登陆失败", phone);
-			return ResponseBean.fail(ResponseCode.RC401, "用户 "+phone+" 密码错误！");
+			return ResponseBean.fail(ResponseCode.RC500, "用户 "+phone+" 密码错误！");
 		}
 	}
 
@@ -82,14 +95,15 @@ public class UserController {
 	 * @param req 请求参数
 	 * @return 登陆结果
 	 */
+	@CrossOrigin
 	@PostMapping("/loginByCode")
 	public ResponseBean<Map<String, String>> loginByCode(@RequestBody Map<String, Object> req) {
 		logger.info("interface:loginByPwd => {}", req);
 		String phone = (String) req.get("phone");
 		String code = (String) req.get("code");
-		UserEntity user = userService.getUserByPhone(phone);
+		SlmUser user = userService.getUserByPhone(phone);
 		if (user != null && code.equals(UserController.code)) {
-			String token = JWTUtil.sign(phone);
+			String token = JwtUtil.createToken(user);
 			return ResponseBean.success("Login successful!", new HashMap<>(){
 				{
 					put("token", token);
@@ -97,9 +111,9 @@ public class UserController {
 				}
 			});
 		} else if (user == null) {
-			return ResponseBean.fail(ResponseCode.RC401, "用户 " + phone + " 不存在！");
+			return ResponseBean.fail(ResponseCode.RC500, "用户 " + phone + " 不存在！");
 		} else {
-			return ResponseBean.fail(ResponseCode.RC401, "验证码 " + code + " 错误！");
+			return ResponseBean.fail(ResponseCode.RC500, "验证码 " + code + " 错误！");
 		}
 	}
 
@@ -108,15 +122,14 @@ public class UserController {
 	 * @param token token
 	 * @return 用户信息
 	 */
+	@CrossOrigin
 	@GetMapping("/getUserInfo")
-	public ResponseBean<Map<String, Object>> getUserInfo(@RequestParam("token") String token ) {
-
+	public ResponseBean<Map<String, Object>> getUserInfo(@RequestParam String token) {
 		logger.info("interface:getUserInfo => {}", token);
-
-		String phone = JWTUtil.getUserPhone(token);
+		String phone = Objects.requireNonNull(JwtUtil.getInfo(token)).get("phone");
 		// 校验token
-		if (JWTUtil.verify(token, phone)) {
-			UserEntity user = userService.getUserByPhone(phone);
+		if (JwtUtil.verifyToken(token)) {
+			SlmUser user = userService.getUserByPhone(phone);
 			return ResponseBean.success("ok", new HashMap<String, Object>(){
 				{
 					put("userId", user.getId());
@@ -126,6 +139,7 @@ public class UserController {
 				}
 			});
 		}
+		log.info("Token 校验未通过");
 		throw new UnauthorizedException();
 	}
 
@@ -134,6 +148,7 @@ public class UserController {
 	 * @param res res
 	 * @return 注册是否成功
 	 */
+	@CrossOrigin
 	@PostMapping("/register")
 	public ResponseBean<Map<String, Object>> register(@RequestBody Map<String, Object> res) {
 
@@ -148,7 +163,7 @@ public class UserController {
 
 		// 注册用户
 		try {
-			UserEntity user = new UserEntity();
+			SlmUser user = new SlmUser();
 			user.setUserName(userName);
 			user.setUserPhone(phone);
 			user.setUserPwd(UserUtils.pwdEncode(pwd, phone));
@@ -169,9 +184,47 @@ public class UserController {
 	}
 
 	/**
+	 * 修改用户信息
+	 * @param res 参数
+	 * @return 是否成功修改用户信息
+	 */
+	@CrossOrigin
+	@PostMapping("/changeUserInfo")
+	public ResponseBean<Map<String, Object>> changeUserInfo(@RequestBody Map<String, Object> res) {
+
+		String username = res.get("name").toString();
+		String phone = res.get("phone").toString();
+		String oldPwd = res.get("oldPwd").toString();
+		String newPwd = res.get("newPwd").toString();
+
+		// 通过电话号获取用户
+		SlmUser user = userService.getUserByPhone(phone);
+		// 虽然这种情况基本不可能存在，但是为了以防万一还是加上好
+		if (user == null) {
+			return ResponseBean.fail(ResponseCode.RC500, "用户不存在！");
+		}
+		if (Objects.equals(UserUtils.pwdEncode(oldPwd, phone), user.getUserPwd())) {
+			user.setUserName(username);
+			user.setUserPwd(UserUtils.pwdEncode(newPwd, phone));
+			userDao.saveAndFlush(user);
+			return ResponseBean.success("ok", new HashMap<String, Object>(){
+				{
+					put("userId", user.getId());
+					put("userName", user.getUserName());
+					put("userPhone", user.getUserPhone());
+					put("userRole", user.getUserRole());
+				}
+			});
+		} else {
+			return ResponseBean.fail(ResponseCode.RC401, "旧密码错误！");
+		}
+	}
+
+	/**
 	 * 生成验证码
 	 * @return 验证码
 	 */
+	@CrossOrigin
 	@PostMapping("/getSmsCode")
 	public ResponseBean<String> getSmsCode() {
 		// 生成随机数
@@ -185,6 +238,7 @@ public class UserController {
 	 * 获取验证码
 	 * @return 验证码
 	 */
+	@CrossOrigin
 	@GetMapping("/getCode")
 	public ResponseBean<String> getCode() {
 		return ResponseBean.success("Get Code!", code);

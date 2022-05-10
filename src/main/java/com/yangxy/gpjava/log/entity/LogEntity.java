@@ -1,7 +1,7 @@
 package com.yangxy.gpjava.log.entity;
 
 import com.yangxy.gpjava.system.entity.SystemEntity;
-import com.yangxy.gpjava.user.entity.UserEntity;
+import com.yangxy.gpjava.user.entity.SlmUser;
 
 import javax.persistence.*;
 
@@ -18,7 +18,7 @@ public class LogEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "CREATE_USER", nullable = false)
-	private UserEntity createUser;
+	private SlmUser createUser;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "LOG_SYSTEM", nullable = false)
@@ -54,11 +54,11 @@ public class LogEntity {
 		this.logSystem = logSystem;
 	}
 
-	public UserEntity getCreateUser() {
+	public SlmUser getCreateUser() {
 		return createUser;
 	}
 
-	public void setCreateUser(UserEntity createUser) {
+	public void setCreateUser(SlmUser createUser) {
 		this.createUser = createUser;
 	}
 

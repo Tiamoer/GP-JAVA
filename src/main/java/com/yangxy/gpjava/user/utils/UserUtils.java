@@ -2,13 +2,9 @@ package com.yangxy.gpjava.user.utils;
 
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
-import com.yangxy.gpjava.token.utils.JWTUtil;
-import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.swing.*;
 
 /**
  * 用户模块工具类

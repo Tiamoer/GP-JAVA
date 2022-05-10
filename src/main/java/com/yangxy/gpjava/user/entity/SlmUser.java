@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 @Entity(name = "com.yangxy.gpjava.user.entity.UserEntity")
 @Table(name = "SLM_USER")
-public class UserEntity implements Serializable {
+public class SlmUser implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 14894864L;
@@ -27,6 +27,9 @@ public class UserEntity implements Serializable {
 
 	@Column(name = "USER_PWD", nullable = false)
 	private String userPwd;
+
+	@Column(name = "USER_SALT")
+	private String userSalt;
 
 	public Long getId() {
 		return id;
@@ -68,6 +71,14 @@ public class UserEntity implements Serializable {
 		this.userPwd = userPwd;
 	}
 
+	public String getUserSalt() {
+		return userSalt;
+	}
+
+	public void setUserSalt(String userSalt) {
+		this.userSalt = userSalt;
+	}
+
 	@Override
 	public String toString() {
 		return "UserEntity{" +
@@ -76,6 +87,7 @@ public class UserEntity implements Serializable {
 				", userPhone='" + userPhone + '\'' +
 				", userRole='" + userRole + '\'' +
 				", userPwd='" + userPwd + '\'' +
+				", userSalt='" + userSalt + '\'' +
 				'}';
 	}
 }
