@@ -8,6 +8,8 @@ package com.yangxy.gpjava.user.service;
 
 import com.yangxy.gpjava.user.entity.SlmUser;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * <p>
  *
@@ -19,4 +21,6 @@ public interface UserService {
 	SlmUser getUserByName(String username);
 
 	SlmUser getUserByPhone(String phone);
+
+	SlmUser getRequestUser(HttpServletRequest request);
 }

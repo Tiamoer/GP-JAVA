@@ -6,12 +6,15 @@
 
 package com.yangxy.gpjava.user.service.impl;
 
+import com.yangxy.gpjava.authentication.jwt.JwtUtil;
 import com.yangxy.gpjava.user.dao.UserDao;
 import com.yangxy.gpjava.user.entity.SlmUser;
 import com.yangxy.gpjava.user.service.UserService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * <p>
@@ -34,5 +37,13 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public SlmUser getUserByPhone(String phone) {
 		return userDao.getUserByPhone(phone);
+	}
+
+	@Override
+	public SlmUser getRequestUser(HttpServletRequest request) {
+		String token = request.getHeader("Authorization");
+		// 根据token获取用户手机号码
+		Map<String, String> userInfo = JwtUtil.getInfo(token);
+		return userDao.getUserByPhone(userInfo.get("phone"));
 	}
 }

@@ -1,6 +1,5 @@
 package com.yangxy.gpjava.authentication.jwt;
 
-import cn.hutool.http.server.HttpServerRequest;
 import cn.hutool.json.JSONUtil;
 import com.yangxy.gpjava.response.bean.ResponseBean;
 import com.yangxy.gpjava.response.code.ResponseCode;
@@ -10,13 +9,11 @@ import org.apache.shiro.web.util.WebUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import javax.naming.AuthenticationException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -46,7 +43,8 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
 			executeLogin(request, response);
 		} catch (Exception e) {
 			try {
-				responseError(response);
+				responseError(response, e);
+				return false;
 			} catch (IOException ex) {
 				throw new RuntimeException(ex);
 			}
@@ -54,10 +52,23 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
 		return true;
 	}
 
+	/**
+	 * 当isAccessAllowed 返回false时，调用此方法，表示需要登录处理，如果该方法返回false，则拦截器无需继续操作
+	 * 主要是解决isAccessAllowed那里异常后，拦截器还是会执行到Controller的问题
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+		return false;
+	}
+
 	@Override
 	protected boolean isLoginAttempt(ServletRequest request, ServletResponse response) {
 		HttpServletRequest req = (HttpServletRequest) request;
-		String token = req.getHeader("slm-token");
+		String token = req.getHeader("Authorization");
 		return token != null;
 	}
 
@@ -65,7 +76,7 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
 	protected boolean executeLogin(ServletRequest request, ServletResponse response) {
 		log.info("进入 JwtFilter -> executeLogin()");
 		HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-		String token = httpServletRequest.getHeader("slm-token");
+		String token = httpServletRequest.getHeader("Authorization");
 		Token myToken = new Token(token);
 		// 提交给realm进行登陆操作
 		getSubject(request, response).login(myToken);
@@ -94,14 +105,19 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
 		return super.preHandle(request, response);
 	}
 
-	private void responseError(ServletResponse response) throws IOException {
+	private void responseError(ServletResponse response, Exception e) throws IOException {
 		HttpServletResponse httpServletResponse = WebUtils.toHttp(response);
 		httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-		httpServletResponse.setCharacterEncoding("UTF-8");
+		httpServletResponse.setCharacterEncoding(StandardCharsets.UTF_8.name());
 		httpServletResponse.setContentType("application/json;charset=UTF-8");
-		ResponseBean<Object> responseBean = ResponseBean.fail(ResponseCode.RC401, "dddd！");
+		ResponseBean<Object> responseBean = ResponseBean.fail(ResponseCode.RC401, e.getMessage());
 		//OutputStream outputStream = httpServletResponse.getOutputStream();
 		//outputStream.write(JSONUtil.toJsonStr(responseBean).getBytes(StandardCharsets.UTF_8));
 		httpServletResponse.getOutputStream().print(JSONUtil.toJsonStr(responseBean));
+		//try {
+		//	httpServletResponse.getWriter().print(JSONUtil.toJsonStr(responseBean));
+		//} catch (IOException ex) {
+		//	throw new RuntimeException(ex);
+		//}
 	}
 }

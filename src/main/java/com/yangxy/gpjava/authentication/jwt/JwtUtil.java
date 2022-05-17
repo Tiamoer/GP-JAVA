@@ -7,9 +7,10 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.yangxy.gpjava.user.entity.SlmUser;
-import org.apache.shiro.authc.UsernamePasswordToken;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,13 +27,13 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "jwt")
 public class JwtUtil {
 
-	UsernamePasswordToken usernamePasswordToken;
+	private static String EXPIRE_TIME;
 
-	private static final long EXPIRE_TIME = 20 * 60 * 1000; //20min
+	//private static final long EXPIRE_TIME = 120 * 60 * 1000; //20min
 	private static final String SECRET = "password";
 
 	public static String createToken(SlmUser user) {
-		Date date = new Date(System.currentTimeMillis() + EXPIRE_TIME);
+		Date date = new Date(System.currentTimeMillis() + Long.parseLong(EXPIRE_TIME));
 		Algorithm algorithm = Algorithm.HMAC256(SECRET);
 		return JWT.create().withClaim("phone", user.getUserPhone())
 				.withClaim("username", user.getUserName())
@@ -56,7 +57,7 @@ public class JwtUtil {
 		try {
 			DecodedJWT decodeJWT = JWT.decode(token);
 			String phone = decodeJWT.getClaim("phone").asString();
-			String username = decodeJWT.getClaim("phone").asString();
+			String username = decodeJWT.getClaim("username").asString();
 			return new HashMap<String, String>(){
 				{
 					put("phone", phone);
@@ -73,4 +74,8 @@ public class JwtUtil {
 		return jwt.getExpiresAt().getTime() < System.currentTimeMillis();
 	}
 
+	@Value("${token.expire_time}")
+	public void setExpireTime(String expireTime) {
+		EXPIRE_TIME = expireTime;
+	}
 }

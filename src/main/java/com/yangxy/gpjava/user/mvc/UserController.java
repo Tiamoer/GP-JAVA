@@ -6,7 +6,6 @@
 
 package com.yangxy.gpjava.user.mvc;
 
-import cn.hutool.jwt.JWTUtil;
 import com.yangxy.gpjava.authentication.jwt.JwtUtil;
 import com.yangxy.gpjava.exception.UnauthorizedException;
 import com.yangxy.gpjava.response.bean.ResponseBean;
@@ -14,19 +13,17 @@ import com.yangxy.gpjava.response.code.ResponseCode;
 import com.yangxy.gpjava.user.dao.UserDao;
 import com.yangxy.gpjava.user.entity.SlmUser;
 import com.yangxy.gpjava.user.service.UserService;
+import com.yangxy.gpjava.user.utils.RedisUtil;
 import com.yangxy.gpjava.user.utils.UserUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.net.http.HttpRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -53,7 +50,13 @@ public class UserController {
 	@Resource
 	private UserDao userDao;
 
+	@Resource
+	private RedisUtil redisUtil;
+
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	@Value("${token.expire_time}")
+	String EXPIRE_TIME;
 
 	/**
 	 * 使用密码登录接口
@@ -77,9 +80,11 @@ public class UserController {
 
 		if (user.getUserPwd().equals(UserUtils.pwdEncode(password, phone))) {
 			logger.info("用户[{}]登陆成功", phone);
+			String token = JwtUtil.createToken(user);
+			// 设置redis中的token
+			redisUtil.set(user.getUserPhone()+token, token, Long.parseLong(EXPIRE_TIME) * 2);
 			return ResponseBean.success("Login successful!", new HashMap<String, String>(){
 				{
-					String token = JwtUtil.createToken(user);
 					put("token", token);
 					put("refreshToken", token);
 				}
@@ -242,6 +247,36 @@ public class UserController {
 	@GetMapping("/getCode")
 	public ResponseBean<String> getCode() {
 		return ResponseBean.success("Get Code!", code);
+	}
+
+	/**
+	 * 用户是否登录 1：已登陆， -1：Token过期， 0：token校验失败
+	 * @param request 请求
+	 * @return Integer
+	 */
+	@CrossOrigin
+	@GetMapping("/isLogin")
+	public ResponseBean<Integer> isLogin(HttpServletRequest request) {
+		String token = request.getHeader("Authorization");
+		// 校验Token
+		if(JwtUtil.verifyToken(token)) {
+			// 获取用户
+			SlmUser loginUser = userService.getRequestUser(request);
+			if (JwtUtil.isExpire(token)) {
+				// 从redis里取token，如果有，就续签token，如果没有则用户Token过期，重新登录
+				if (redisUtil.hasKey(loginUser.getUserPhone() + token)) {
+					String newToken = JwtUtil.createToken(loginUser);
+					redisUtil.set(loginUser.getUserPhone()+token, newToken, Long.parseLong(EXPIRE_TIME)*2);
+					return ResponseBean.success("success!", 1);
+				} else {
+					return ResponseBean.success("fail", -1);
+				}
+			} else {
+				return ResponseBean.success("success!", 1);
+			}
+		} else {
+			return ResponseBean.success("fail", 0);
+		}
 	}
 
 }

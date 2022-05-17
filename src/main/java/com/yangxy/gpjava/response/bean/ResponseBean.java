@@ -27,8 +27,8 @@ public class ResponseBean<T> {
 		this.data = data;
 	}
 
-	public static <T> ResponseBean<T> success(String message, T data) {
-		return new ResponseBean<T>(ResponseCode.RC200.getCode(), message, data);
+	public static <T> ResponseBean<T> success(String msg, T data) {
+		return new ResponseBean<T>(ResponseCode.RC200.getCode(), msg, data);
 	}
 
 	public static <T> ResponseBean<T> fail(ResponseCode code, String msg) {

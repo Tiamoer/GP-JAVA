@@ -6,15 +6,7 @@
 
 package com.yangxy.gpjava.exception;
 
-import com.yangxy.gpjava.response.bean.ResponseBean;
-import com.yangxy.gpjava.response.code.ResponseCode;
-import org.apache.shiro.ShiroException;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>
@@ -26,45 +18,50 @@ import javax.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 public class ExceptionController {
 
-	/**
-	 * Shiro异常拦截封装
-	 * @param e shiro异常
-	 * @return ResponseBean.fail
-	 */
-	@ResponseStatus(HttpStatus.UNAUTHORIZED)
-	@ExceptionHandler(ShiroException.class)
-	public ResponseBean<Object> handle401(ShiroException e) {
-		e.printStackTrace();
-		return ResponseBean.fail(ResponseCode.RC401, e.getMessage());
-	}
-
-	/**
-	 * 授权异常
-	 * @return ResponseBean.fail
-	 */
-	@ResponseStatus(HttpStatus.UNAUTHORIZED)
-	@ExceptionHandler(UnauthorizedException.class)
-	public ResponseBean<Object> handle401() {
-		return ResponseBean.fail(ResponseCode.RC401, "Unauthorized");
-	}
-
-	/**
-	 * 控制器全局异常处理
-	 * @return ResponseBean.fail
-	 */
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	@ExceptionHandler(Exception.class)
-	public ResponseBean<Object> handleException(HttpServletRequest request, Throwable throwable) {
-		throwable.printStackTrace();
-		return new ResponseBean<>(getStatus(request).value(),throwable.getMessage(), null);
-	}
-
-	private HttpStatus getStatus(HttpServletRequest request) {
-		Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
-		if (statusCode == null) {
-			return HttpStatus.INTERNAL_SERVER_ERROR;
-		}
-		return HttpStatus.valueOf(statusCode);
-	}
+	///**
+	// * Shiro异常拦截封装
+	// * @param e shiro异常
+	// * @return ResponseBean.fail
+	// */
+	//@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	//@ExceptionHandler(ShiroException.class)
+	//public ResponseBean<Object> handle401(ShiroException e) {
+	//	e.printStackTrace();
+	//	return ResponseBean.fail(ResponseCode.RC401, e.getMessage());
+	//}
+	//
+	///**
+	// * 授权异常
+	// * @return ResponseBean.fail
+	// */
+	//@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	//@ExceptionHandler(UnauthorizedException.class)
+	//public ResponseBean<Object> handle401() {
+	//	return ResponseBean.fail(ResponseCode.RC401, "Unauthorized");
+	//}
+	//
+	///**
+	// * 控制器全局异常处理
+	// * @return ResponseBean.fail
+	// */
+	//@ResponseStatus(HttpStatus.BAD_REQUEST)
+	//@ExceptionHandler(Exception.class)
+	//public ResponseBean<Object> handleException(HttpServletRequest request, Throwable throwable) {
+	//	throwable.printStackTrace();
+	//	return new ResponseBean<>(getStatus(request).value(),throwable.getMessage(), null);
+	//}
+	//
+	//@ExceptionHandler(UnauthenticatedException.class)
+	//public ResponseBean<Object> handleUnauthenticated(UnauthorizedException e) {
+	//	return ResponseBean.fail(ResponseCode.RC500, e.getMessage());
+	//}
+	//
+	//private HttpStatus getStatus(HttpServletRequest request) {
+	//	Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
+	//	if (statusCode == null) {
+	//		return HttpStatus.INTERNAL_SERVER_ERROR;
+	//	}
+	//	return HttpStatus.valueOf(statusCode);
+	//}
 
 }

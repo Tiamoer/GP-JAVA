@@ -3,10 +3,11 @@ package com.yangxy.gpjava.system.entity;
 import com.yangxy.gpjava.user.entity.SlmUser;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "SLM_SYSTEM")
-public class SystemEntity {
+public class SystemEntity implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", nullable = false)
@@ -86,4 +87,6 @@ public class SystemEntity {
 	public void setId(Long id) {
 		this.id = id;
 	}
+
+
 }
