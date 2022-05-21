@@ -14,4 +14,6 @@ public interface SystemConnectService {
 
 	ExecCmdResult execCommand(String host, String userName, String password, String cmd);
 
+	
+
 }

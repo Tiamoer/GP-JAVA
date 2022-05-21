@@ -1,9 +1,12 @@
 package com.yangxy.gpjava.system.mvc;
 
+import ch.ethz.ssh2.Connection;
 import com.yangxy.gpjava.response.bean.ResponseBean;
 import com.yangxy.gpjava.response.code.ResponseCode;
 import com.yangxy.gpjava.system.dao.SystemDao;
+import com.yangxy.gpjava.system.dd.SystemStatusEnum;
 import com.yangxy.gpjava.system.entity.SystemEntity;
+import com.yangxy.gpjava.system.utils.SSHUtils;
 import com.yangxy.gpjava.user.entity.SlmUser;
 import com.yangxy.gpjava.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +35,9 @@ public class SystemController {
 	SystemDao systemDao;
 	@Resource
 	UserService userService;
+
+	@Resource
+	SSHUtils sshUtils;
 
 	@CrossOrigin
 	@PostMapping("/add")
@@ -61,7 +69,15 @@ public class SystemController {
 			systemEntity.setSystemPassword(password);
 			systemEntity.setSystemPort(port);
 			systemEntity.setCreateUser(loginUser);
-			systemDao.saveAndFlush(systemEntity);
+			SystemEntity resSystem = systemDao.saveAndFlush(systemEntity);
+			// 测试连通性
+			try {
+				Connection connection = SSHUtils.getConnection(resSystem.getSystemHost(), resSystem.getSystemUsername(), resSystem.getSystemPassword());
+				resSystem.setStatus(SystemStatusEnum.OPEN.name());
+			} catch (Exception e) {
+				resSystem.setStatus(SystemStatusEnum.CLOSE.name());
+			}
+			systemDao.saveAndFlush(resSystem);
 		} catch (Exception e) {
 			log.error("保存系统信息失败，{}", e.getMessage());
 			e.printStackTrace();
@@ -131,6 +147,33 @@ public class SystemController {
 			return ResponseBean.fail(ResponseCode.RC500, e.getMessage());
 		}
 		return ResponseBean.success("success!", 1);
+	}
+
+	@CrossOrigin
+	@GetMapping("/getSystemLabel")
+	public ResponseBean<List<Map<String, Object>>> getSystemLabel(HttpServletRequest request) {
+		List<Map<String, Object>> sysLabelList = null;
+		List<Map<String, Object>> res = null;
+		try {
+			SlmUser user = userService.getRequestUser(request);
+			sysLabelList = systemDao.getSystemLabel(user.getId());
+			res = new ArrayList<>();
+			List<Map<String, Object>> finalRes = res;
+			sysLabelList.forEach(stringObjectMap -> {
+				String label = stringObjectMap.get("SYSTEM_NAME").toString();
+				long id = Long.parseLong(stringObjectMap.get("ID").toString());
+				finalRes.add(new HashMap<>(){
+					{
+						put("label", label);
+						put("value", id);
+					}
+				});
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseBean.fail(ResponseCode.RC500, e.getMessage());
+		}
+		return ResponseBean.success("success!", res);
 	}
 
 }

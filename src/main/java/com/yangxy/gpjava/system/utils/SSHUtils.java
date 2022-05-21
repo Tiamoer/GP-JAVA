@@ -4,6 +4,7 @@ import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
 import com.yangxy.gpjava.system.bean.ExecCmdResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,39 +15,39 @@ import java.nio.charset.StandardCharsets;
 /**
  * <p>
  * SSH2工具类
+ *
  * @author <a href="mailto:tiamoer@outlook.com">yangxy</a>
  * @version 1.0, 2022/5/10
  */
 
 @Slf4j
+@Component
 public class SSHUtils {
 
 	/**
 	 * 获取服务器连接
+	 *
 	 * @param hostname 服务器地址
 	 * @param username 服务器用户名称
 	 * @param password 服务器密码
 	 * @return 服务器连接Connection
 	 */
-	public static Connection getConnection(String hostname, String username, String password) {
+	public static Connection getConnection(String hostname, String username, String password) throws IOException {
 		Connection connection = new Connection(hostname);
-		try {
-			connection.connect();
-			boolean login = connection.authenticateWithPassword(username, password);
-			if (login) {
-				return connection;
-			} else {
-				throw new RuntimeException("服务器用户名称及密码错误！");
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		connection.connect();
+		boolean login = connection.authenticateWithPassword(username, password);
+		if (login) {
+			return connection;
+		} else {
+			throw new RuntimeException("服务器用户名称及密码错误！");
 		}
 	}
 
 	/**
 	 * 执行一条命令
+	 *
 	 * @param connection ssh2 连接对象
-	 * @param command 执行的命令
+	 * @param command    执行的命令
 	 * @return ExecCmdResult 执行结果
 	 */
 	public static ExecCmdResult execCommand(Connection connection, String command) {
@@ -70,16 +71,16 @@ public class SSHUtils {
 		} catch (IOException e) {
 			log.error("EXEC命令执行出错,{}", e.getMessage());
 			e.printStackTrace();
+			throw new RuntimeException("EXEC命令执行出错," + e.getMessage());
 		} finally {
 			if (session != null)
 				session.close();
 		}
-		return null;
-
 	}
 
 	/**
 	 * 解析执行结果
+	 *
 	 * @param inputStream 执行结果的流
 	 * @return 执行结果String
 	 */
@@ -89,7 +90,7 @@ public class SSHUtils {
 		StringBuilder resultSb = new StringBuilder();
 		String line;
 		while ((line = br.readLine()) != null) {
-			resultSb.append(line).append("\n");
+			resultSb.append(line).append("<br />");
 		}
 		return resultSb.toString();
 	}

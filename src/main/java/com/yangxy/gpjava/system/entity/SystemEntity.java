@@ -32,6 +32,9 @@ public class SystemEntity implements Serializable {
 	@JoinColumn(name = "CREATE_USER", nullable = false)
 	private SlmUser createUser;
 
+	@Column(name = "STATUS", nullable = true, length = 50)
+	private String status;
+
 	public SlmUser getCreateUser() {
 		return createUser;
 	}
@@ -88,5 +91,11 @@ public class SystemEntity implements Serializable {
 		this.id = id;
 	}
 
+	public String getStatus() {
+		return status;
+	}
 
+	public void setStatus(String status) {
+		this.status = status;
+	}
 }

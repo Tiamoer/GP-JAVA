@@ -7,7 +7,8 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "SLM_LOG")
-public class LogEntity {
+public class LogEntity{
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", nullable = false)

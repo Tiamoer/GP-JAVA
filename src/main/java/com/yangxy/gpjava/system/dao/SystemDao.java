@@ -24,7 +24,7 @@ public interface SystemDao extends JpaRepository<SystemEntity, Long> {
 	@Query(value = "SELECT t.* FROM SLM_SYSTEM t WHERE t.SYSTEM_HOST = :host AND t.SYSTEM_PORT = :port AND t.SYSTEM_USERNAME = :userName AND t.CREATE_USER = :userId", nativeQuery = true)
 	List<SystemEntity> findByHost(@Param("host") String host, @Param("port") long port, @Param("userName") String userName, @Param("userId") long userId);
 
-	@Query(value = "SELECT t.ID, t.SYSTEM_NAME, t.SYSTEM_HOST, t.SYSTEM_PORT, t.SYSTEM_USERNAME FROM SLM_SYSTEM t WHERE t.CREATE_USER = :userId", nativeQuery = true)
+	@Query(value = "SELECT t.ID, t.SYSTEM_NAME, t.SYSTEM_HOST, t.SYSTEM_PORT, t.SYSTEM_USERNAME, t.STATUS FROM SLM_SYSTEM t WHERE t.CREATE_USER = :userId", nativeQuery = true)
 	List<Map<String, Object>> findAllByCreateUser(@Param("userId") long userId);
 
 	@Query(value = "SELECT t.* FROM SLM_SYSTEM t WHERE t.ID = :sysId", nativeQuery = true)
@@ -34,4 +34,7 @@ public interface SystemDao extends JpaRepository<SystemEntity, Long> {
 	@Transactional
 	@Query(value = "UPDATE SLM_SYSTEM t SET SYSTEM_NAME = :sysName, SYSTEM_HOST = :sysHost, SYSTEM_PORT = :sysPort, SYSTEM_USERNAME = :sysUsername, SYSTEM_PASSWORD = :sysPassword WHERE ID = :sysId", nativeQuery = true)
 	int updateSystem(@Param("sysName") String name, @Param("sysHost") String host, @Param("sysPort") long port, @Param("sysUsername") String username, @Param("sysPassword") String password, @Param("sysId") long sysId);
+
+	@Query(value = "SELECT DISTINCT t.SYSTEM_NAME, t.ID FROM SLM_SYSTEM t WHERE t.CREATE_USER = :userId", nativeQuery = true)
+	List<Map<String, Object>> getSystemLabel(@Param("userId") Long userId);
 }

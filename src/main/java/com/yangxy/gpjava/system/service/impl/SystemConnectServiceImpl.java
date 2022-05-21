@@ -7,6 +7,8 @@ import com.yangxy.gpjava.system.utils.SSHUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 /**
  * <p>
  *
@@ -21,7 +23,12 @@ public class SystemConnectServiceImpl implements SystemConnectService {
 	@Override
 	public ExecCmdResult execCommand(String host, String userName, String password, String cmd) {
 
-		Connection connection = SSHUtils.getConnection(host, userName, password);
+		Connection connection = null;
+		try {
+			connection = SSHUtils.getConnection(host, userName, password);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		return SSHUtils.execCommand(connection, "cat cat /run/cloud-init/cloud-init-generator.log");
 
 	}
